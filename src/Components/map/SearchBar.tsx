@@ -28,6 +28,7 @@ type SuggestionItem =
   | { type: "location"; data: Location }
   | { type: "person"; data: PersonaResult };
 
+
 // Props interface was missing — added here
 interface Props {
   value: string;
@@ -80,6 +81,8 @@ const SearchBar = ({ value, onChange, onSelectLocation }: Props) => {
 
       setSuggestions(merged);
       setShowSuggestions(merged.length > 0);
+
+      
     } catch (error) {
       console.error("Error en búsqueda:", error);
     } finally {
