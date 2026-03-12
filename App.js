@@ -8,6 +8,8 @@ import MapScreen from './src/Views/MapScreen';
 
 const Stack = createStackNavigator();
 
+
+
 export default function App() {
   return (
     <NavigationContainer>
