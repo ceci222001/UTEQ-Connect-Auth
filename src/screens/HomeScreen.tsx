@@ -16,6 +16,9 @@ import api from '../api/axios';
 import calendario1 from '../assets/calendario.png';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from '../types/navigation';
+import Most_visited from '../Components/most_visited/Most_visited';
+
+
 
 type HomeScreenProps = {
   navigation: BottomTabNavigationProp<MainTabParamList, 'HomeTab'>;
@@ -171,78 +174,8 @@ const HomeScreen = ({ navigation, setIsLoggedIn }: HomeScreenProps) => {
           </TouchableOpacity>
         </View>
 
-        {/* Slider de Destinos */}
-        <View style={styles.sliderSection}>
-          <Text style={styles.sectionTitle}>Más Visitados</Text>
-          <ScrollView
-            ref={scrollViewRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            decelerationRate="fast"
-            snapToInterval={CARD_WIDTH + 16}
-            snapToAlignment="center"
-            contentContainerStyle={styles.sliderContent}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-          >
-            {destinations.map((destination, index) => {
-              const imageUrl = getImageUrl(destination.image);
-
-              return (
-                <View
-                  key={destination._id}
-                  style={[styles.destinationCard, index === 0 && styles.firstCard]}
-                >
-                  <View style={styles.cardImageContainer}>
-                    {imageUrl ? (
-                      <Image
-                        source={{ uri: imageUrl }}
-                        style={styles.cardImage}
-                        resizeMode="cover"
-                        onError={(error) => {
-                          console.log('❌ Error cargando imagen:', imageUrl);
-                          console.log('Error details:', error.nativeEvent.error);
-                        }}
-                        onLoad={() => {
-                          console.log('✅ Imagen cargada exitosamente:', imageUrl);
-                        }}
-                      />
-                    ) : (
-                      <View style={styles.cardImagePlaceholder}>
-                        <Text style={{ fontSize: 16, color: '#999', fontWeight: '600' }}>
-                          SIN IMAGEN
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.cardContent}>
-                    <Text style={styles.cardTitle} numberOfLines={2}>
-                      {destination.nombre}
-                    </Text>
-
-                    <TouchableOpacity
-                      style={styles.cardButton}
-                      onPress={() => handleNavigateToDestination(destination)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.cardButtonText}>Ver Ruta</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })}
-          </ScrollView>
-
-          <View style={styles.pagination}>
-            {destinations.map((_, index) => (
-              <View
-                key={index}
-                style={[styles.dot, index === activeSlide && styles.dotActive]}
-              />
-            ))}
-          </View>
-        </View>
+        {/* Destinos más visitados */}
+        <Most_visited />
 
         {/* Calendario */}
         <View style={styles.calendarSection}>
