@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import styles from '../styles/LoginScreenStyle';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../api/config';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 interface Props {
   navigation: any;
@@ -25,6 +26,39 @@ const LoginScreen = ({ navigation, setIsLoggedIn }: Props) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+
+  useEffect(() => {
+    checkBiometricAvailability();
+  }, []);
+
+
+  
+
+  const checkBiometricAvailability = async () => {
+    const compatible = await LocalAuthentication.hasHardwareAsync();
+    const enrolled = await LocalAuthentication.isEnrolledAsync();
+    const token = await AsyncStorage.getItem('userToken');
+    setBiometricAvailable(compatible && enrolled && !!token);
+  };
+
+  const handleBiometricLogin = async () => {
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Inicia sesión con tu huella',
+      fallbackLabel: 'Usar contraseña',
+      cancelLabel: 'Cancelar',
+    });
+
+    if (result.success) {
+      const token = await AsyncStorage.getItem('userToken');
+      if (token) {
+        setIsLoggedIn(true);
+        navigation.replace('MainTabs');
+      }
+    } else {
+      Alert.alert('Error', 'No se pudo verificar tu identidad');
+    }
+  };
 
   const validateForm = () => {
     if (!email.trim()) {
@@ -65,15 +99,12 @@ const LoginScreen = ({ navigation, setIsLoggedIn }: Props) => {
         }),
       });
 
-      
-
       const data = await response.json();
 
       if (response.ok && data.success) {
         const user = data.data.user;
         const token = data.data.token;
 
-        // Guardar información del usuario Y el token en AsyncStorage
         await AsyncStorage.setItem('userToken', token);
         await AsyncStorage.setItem('userId', user._id);
         await AsyncStorage.setItem('userEmail', user.email);
@@ -82,7 +113,6 @@ const LoginScreen = ({ navigation, setIsLoggedIn }: Props) => {
 
         console.log('Login exitoso, token guardado:', token);
 
-        // Login exitoso
         setIsLoggedIn(true);
         navigation.replace('MainTabs');
       } else {
@@ -106,7 +136,6 @@ const LoginScreen = ({ navigation, setIsLoggedIn }: Props) => {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header con botón back */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -117,7 +146,6 @@ const LoginScreen = ({ navigation, setIsLoggedIn }: Props) => {
           </TouchableOpacity>
         </View>
 
-        {/* Logo pequeño */}
         <View style={styles.miniLogoContainer}>
           <View style={styles.miniLogo}>
             <MaterialCommunityIcons name="map-marker-check" size={32} color="#fff" />
@@ -125,9 +153,7 @@ const LoginScreen = ({ navigation, setIsLoggedIn }: Props) => {
           <Text style={styles.logoText}>UTEQ Connect</Text>
         </View>
 
-        {/* Formulario */}
         <View style={styles.formContainer}>
-          {/* Email */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>CORREO ELECTRONICO</Text>
             <TextInput
@@ -142,7 +168,6 @@ const LoginScreen = ({ navigation, setIsLoggedIn }: Props) => {
             />
           </View>
 
-          {/* Password */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>CONTRASEÑA</Text>
             <View style={{ position: 'relative' }}>
@@ -185,7 +210,23 @@ const LoginScreen = ({ navigation, setIsLoggedIn }: Props) => {
             )}
           </TouchableOpacity>
 
-          {/* Botón Registrarse */}
+          {biometricAvailable && (
+            <TouchableOpacity
+              style={{
+                alignItems: 'center',
+                marginTop: 20,
+                padding: 12,
+              }}
+              onPress={handleBiometricLogin}
+              disabled={loading}
+            >
+              <MaterialCommunityIcons name="fingerprint" size={48} color="#0066CC" />
+              <Text style={{ color: '#0066CC', marginTop: 6, fontSize: 14 }}>
+                Iniciar con huella
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={styles.registerButton}
             onPress={() => navigation.navigate('Register')}

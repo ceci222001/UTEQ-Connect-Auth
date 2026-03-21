@@ -160,13 +160,11 @@ const EventDetailScreen = () => {
     });
   };
 
-  const formatDateRange = (startDate: string, endDate: string) => {
+  const formatDateRange = (startDate: string) => {
     const start = new Date(startDate);
-    const end = new Date(endDate);
     const startDay = new Date(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
-    const endDay = new Date(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
-    if (startDay.getTime() === endDay.getTime()) return formatDate(startDate);
-    return `${formatDate(startDate)} hasta ${formatDate(endDate)}`;
+    if (startDay.getTime() === startDay.getTime()) return formatDate(startDate);
+    return `${formatDate(startDate)} hasta ${formatDate(startDate)}`;
   };
 
   const getImageUrl = (imagePath: string) => {
@@ -232,7 +230,7 @@ const EventDetailScreen = () => {
               </View>
               <View style={styles.infoTextContainer}>
                 <Text style={styles.infoLabel}>Fecha</Text>
-                <Text style={styles.infoValue}>{formatDateRange(event.fechaInicio, event.fechaFin)}</Text>
+                <Text style={styles.infoValue}>{formatDateRange(event.fecha)}</Text>
               </View>
             </View>
 
@@ -241,7 +239,7 @@ const EventDetailScreen = () => {
               <View style={styles.iconContainer}>
                 <Icon name="time-outline" size={20} color="#1a1a1a" />
               </View>
-              <View style={styles.infoTextContainer}>
+              <View style={styles.infoTextContainer}> 
                 <Text style={styles.infoLabel}>Horario</Text>
                 <Text style={styles.infoValue}>{event.horaInicio} - {event.horaFin}</Text>
               </View>

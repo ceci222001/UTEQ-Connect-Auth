@@ -47,7 +47,7 @@ const MapViewContainer = () => {
     const obtenerUbicacionActual = async () => {
         try {
             setLoadingLocation(true);
-            const USE_TESTING_LOCATION = true;
+            const USE_TESTING_LOCATION = false;
 
             if (USE_TESTING_LOCATION) {
                 setCurrentLocation(UTEQ_COORDS);

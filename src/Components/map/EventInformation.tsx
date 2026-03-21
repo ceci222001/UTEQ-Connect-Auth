@@ -187,7 +187,6 @@ const EventInformation: React.FC<Props> = ({ event, visible, onClose }) => {
     );
 };
 
-// ── Styles ─────────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
     overlay: {

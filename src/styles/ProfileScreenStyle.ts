@@ -1,15 +1,21 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
+
+const HEADER_HEIGHT = Platform.OS === "ios" ? 130 : 110;
+const AVATAR_SIZE = 96;
+const AVATAR_OVERLAP = AVATAR_SIZE / 2; // cuánto sobresale del header
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#F2F2F2",
     },
+
+    // ── Header ──────────────────────────────────
     header: {
-        height: 140,
+        height: 120,
         backgroundColor: "#1D356B",
         paddingHorizontal: 20,
-        paddingTop: 50,
+        paddingTop: Platform.OS === "ios" ? 54 : 38,
         alignItems: "flex-end",
         justifyContent: "flex-start",
     },
@@ -29,41 +35,35 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: "600",
     },
-    content: {
-        backgroundColor: "#fff",
-        marginTop: -10,
-        marginHorizontal: 16,
-        borderRadius: 16,
-        paddingHorizontal: 20,
-        paddingTop: 60,
-        paddingBottom: 24,
+
+    // ── Avatar (fuera del scroll, flota sobre header y tarjeta) ──
+    avatarContainer: {
+        position: "absolute",
+        top: HEADER_HEIGHT - AVATAR_OVERLAP,
+        left: 0,
+        right: 0,
         alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
-        elevation: 5,
+        zIndex: 20,
     },
     avatarWrapper: {
-        position: "absolute",
-        top: -42,
-        alignItems: "center",
-        justifyContent: "center",
+        position: "relative",
+        width: AVATAR_SIZE,
+        height: AVATAR_SIZE,
     },
     avatar: {
-        width: 92,
-        height: 92,
-        borderRadius: 46,
+        width: AVATAR_SIZE,
+        height: AVATAR_SIZE,
+        borderRadius: AVATAR_SIZE / 2,
         borderWidth: 4,
         borderColor: "#fff",
     },
     editAvatarButton: {
         position: "absolute",
-        right: -6,
-        bottom: -2,
-        width: 26,
-        height: 26,
-        borderRadius: 13,
+        right: 0,
+        bottom: 0,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
         backgroundColor: "#fff",
         alignItems: "center",
         justifyContent: "center",
@@ -73,8 +73,35 @@ const styles = StyleSheet.create({
         shadowRadius: 3,
         elevation: 3,
     },
+
+    // ── Scroll ──────────────────────────────────
+    scrollView: {
+        flex: 1,
+        // sube el scroll para que la tarjeta quede bajo el avatar
+        marginTop: -(AVATAR_OVERLAP),
+    },
+    scrollContent: {
+        paddingTop: AVATAR_OVERLAP + 8,  // espacio = mitad del avatar + pequeño margen
+        paddingBottom: 60,
+    },
+
+    // ── Tarjeta de perfil ────────────────────────
+    content: {
+        backgroundColor: "#fff",
+        marginHorizontal: 16,
+        borderRadius: 20,
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 28,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.10,
+        shadowRadius: 12,
+        elevation: 5,
+    },
     name: {
-        marginTop: 8,
+        marginTop: 4,
         fontSize: 20,
         fontWeight: "700",
         color: "#111",
@@ -85,7 +112,7 @@ const styles = StyleSheet.create({
         borderColor: "#333",
         paddingHorizontal: 14,
         paddingVertical: 4,
-        borderRadius: 14,
+        borderRadius: 20,
     },
     badgeText: {
         fontSize: 12,
@@ -93,10 +120,31 @@ const styles = StyleSheet.create({
         color: "#222",
     },
     email: {
-        marginTop: 16,
+        marginTop: 12,
         fontSize: 13,
         color: "#777",
     },
+    logoutButton: {
+        marginTop: 20,
+        backgroundColor: "#8B0F1A",
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 10,
+        minWidth: 200,
+        alignItems: "center",
+    },
+    logoutButtonText: {
+        color: "#fff",
+        fontSize: 15,
+        fontWeight: "600",
+    },
+
+    // ── Boletos ──────────────────────────────────
+    ticketsSection: {
+        marginTop: 24,
+    },
+
+    // ── legacy ───────────────────────────────────
     infoList: {
         marginTop: 24,
         width: "100%",
@@ -105,20 +153,6 @@ const styles = StyleSheet.create({
     infoItem: {
         fontSize: 14,
         color: "#333",
-    },
-    logoutButton: {
-        marginTop: 24,
-        backgroundColor: "#8B0F1A",
-        paddingVertical: 12,
-        paddingHorizontal: 30,
-        borderRadius: 8,
-        minWidth: 200,
-        alignItems: "center",
-    },
-    logoutButtonText: {
-        color: "#fff",
-        fontSize: 15,
-        fontWeight: "600",
     },
     bottomNav: {
         position: "absolute",

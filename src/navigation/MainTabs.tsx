@@ -119,7 +119,6 @@ const MainTabs = ({ setIsLoggedIn }: MainTabsProps) => {
 
 const styles = StyleSheet.create({
   tabBar: {
-    position: 'absolute',
     bottom: 14,
     left: 20,
     right: 20,
