@@ -1,20 +1,14 @@
-// src/screens/MapScreen.tsx
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import MapViewContainer from "../Components/map/MapViewContainer";
+import styles from "../styles/MapScreenStyle";
 
-const MapScreen = () => {
-    return (
-        <View style={styles.container}>
-            <MapViewContainer />
-        </View>
-    );
+const MapScreen = ({ route }: { route: any }) => {
+  return (
+    <View style={styles.container}>
+      <MapViewContainer initialDestination={route?.params?.destination} />
+    </View>
+  );
 };
 
 export default MapScreen;
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-});

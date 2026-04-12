@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, Modal } from "react-native";
 import { RouteInfo } from "../../types";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 import { styles } from "../../styles/RouteInfoSheetStyle";
 import LocationInformation from "./LocationInformation";
+import PersonInformation from "./PersonInformation";
+import EventInformation from "./EventInformation";
 
 interface RouteInfoSheetProps {
     routeInfo: RouteInfo | null;
@@ -22,36 +24,118 @@ const RouteInfoSheet: React.FC<RouteInfoSheetProps> = ({
     onClose,
     onStartNavigation,
     isNavigating = false,
-    isRecalculating = false
+    isRecalculating = false,
 }) => {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [showLocationInfo, setShowLocationInfo] = useState(false);
+    const [showInfo, setShowInfo] = useState(false);
 
     if (!routeInfo) return null;
 
-    const handleStartNavigation = () => {
-        if (onStartNavigation) {
-            onStartNavigation();
-            setIsExpanded(false);
+    const isPerson = selectedLocation?.isPerson === true;
+    const isEvent = selectedLocation?.isEvent === true;
+
+    // ── Derived labels ─────────────────────────────────────────────────────────
+
+    // Construir nombre completo desde campos separados si nombreCompleto no existe
+    const nombreCompleto =
+        selectedLocation?.nombreCompleto ??
+        `${selectedLocation?.nombre ?? ""} ${selectedLocation?.apellidoPaterno ?? ""} ${selectedLocation?.apellidoMaterno ?? ""}`.trim();
+
+    const displayName = isPerson
+        ? nombreCompleto
+        : isEvent
+            ? selectedLocation.eventTitulo
+            : destinationName || "Destino";
+
+    const displaySubtitle = isPerson
+        ? `${selectedLocation.cargo ?? ""} · ${selectedLocation.edificioNombre ?? selectedLocation.ubicacion?.nombre ?? ""}`
+        : isEvent
+            ? `${selectedLocation.eventHoraInicio}–${selectedLocation.eventHoraFin} · ${selectedLocation.nombre}`
+            : null;
+
+    const infoColor = isPerson ? "#E53935" : isEvent ? "#FB8C00" : "#4285F4";
+    const infoIcon = isPerson ? "person-circle" : isEvent ? "calendar" : "information-circle";
+    const infoLabel = isPerson
+        ? "Ver información del profesor"
+        : isEvent
+            ? "Ver información del evento"
+            : "Información de la ubicación";
+    const headerIcon = isPerson ? "person" : isEvent ? "calendar" : "location";
+
+    // ── Data shapes for child modals ───────────────────────────────────────────
+
+    console.log('selectedLocation completo:', JSON.stringify(selectedLocation, null, 2));
+
+    const personData = isPerson
+        ? {
+            numeroEmpleado: selectedLocation.numeroEmpleado ?? "",
+            nombreCompleto: nombreCompleto,
+            email: selectedLocation.email ?? "",
+            telefono: selectedLocation.telefono ?? "",
+            cargo: selectedLocation.cargo ?? "",
+            departamento: selectedLocation.departamento ?? "",
+            cubiculo: selectedLocation.cubiculo ?? null,
+            planta: selectedLocation.planta ?? null,
+
+            // Acceso directo — no anidado para evitar undefined silencioso
+            imagenPerfil: selectedLocation.imagenPerfil ?? null,
+            imagenHorario: selectedLocation.imagenHorario ?? null,
+
+            ubicacion: selectedLocation.ubicacion ?? {
+                nombre:
+                    selectedLocation.edificioNombre ??
+                    selectedLocation.nombre ??
+                    "",
+                coordenadas:
+                    selectedLocation.posicion ??
+                    selectedLocation.coordenadas ??
+                    null,
+            },
         }
+        : null;
+
+    const eventData = isEvent
+        ? {
+            _id: selectedLocation.eventId ?? selectedLocation._id,
+            titulo: selectedLocation.eventTitulo ?? "",
+            descripcion: selectedLocation.eventDescripcion,
+            fecha: selectedLocation.eventFecha ?? "",
+            horaInicio: selectedLocation.eventHoraInicio ?? "",
+            horaFin: selectedLocation.eventHoraFin ?? "",
+            cupos: selectedLocation.eventCupos ?? 0,
+            cuposDisponibles: selectedLocation.eventCuposDisponibles ?? 0,
+            activo: selectedLocation.eventActivo ?? true,
+            image: selectedLocation.eventImage,
+            destinoNombre: selectedLocation.nombre,
+            espacioNombre: selectedLocation.eventEspacioNombre,
+            encargado: selectedLocation.eventEncargado,
+            encargadoEmail: selectedLocation.eventEncargadoEmail,
+        }
+        : null;
+
+    // ── Handlers ───────────────────────────────────────────────────────────────
+
+    const handleStartNavigation = () => {
+        onStartNavigation?.();
+        setIsExpanded(false);
     };
 
-    const toggleExpanded = () => {
-        setIsExpanded(!isExpanded);
-    };
+    // ── Render ─────────────────────────────────────────────────────────────────
 
     return (
         <>
             <View style={styles.container}>
                 <TouchableOpacity
                     style={styles.handleContainer}
-                    onPress={toggleExpanded}
+                    onPress={() => setIsExpanded((v) => !v)}
                     activeOpacity={0.7}
                 >
                     <View style={styles.handle} />
                 </TouchableOpacity>
 
                 <View style={styles.content}>
+
+                    {/* ── Minimised ─────────────────────────────────────── */}
                     {!isExpanded && (
                         <View style={styles.minimizedView}>
                             <View style={styles.minimizedHeader}>
@@ -60,50 +144,54 @@ const RouteInfoSheet: React.FC<RouteInfoSheetProps> = ({
                                 </View>
                                 <View style={styles.minimizedInfo}>
                                     <Text style={styles.minimizedDestination} numberOfLines={1}>
-                                        {destinationName || "Destino"}
+                                        {displayName}
                                     </Text>
                                     <View style={styles.minimizedStats}>
-                                        <Text style={styles.minimizedStat}>
-                                            {routeInfo.distancia}
-                                        </Text>
+                                        <Text style={styles.minimizedStat}>{routeInfo.distancia}</Text>
                                         <Text style={styles.minimizedDivider}>•</Text>
-                                        <Text style={styles.minimizedStat}>
-                                            {routeInfo.duracion}
-                                        </Text>
+                                        <Text style={styles.minimizedStat}>{routeInfo.duracion}</Text>
                                         {isNavigating && (
                                             <>
                                                 <Text style={styles.minimizedDivider}>•</Text>
                                                 <View style={styles.minimizedPulse} />
-                                                <Text style={[styles.minimizedStat, { color: '#34A853' }]}>
+                                                <Text style={[styles.minimizedStat, { color: "#34A853" }]}>
                                                     Navegando
                                                 </Text>
                                             </>
                                         )}
                                     </View>
                                 </View>
-                                <TouchableOpacity onPress={toggleExpanded}>
+                                <TouchableOpacity onPress={() => setIsExpanded(true)}>
                                     <Ionicons name="chevron-up" size={24} color="#5F6368" />
                                 </TouchableOpacity>
                             </View>
                         </View>
                     )}
 
+                    {/* ── Expanded ──────────────────────────────────────── */}
                     {isExpanded && (
                         <>
+                            {/* Header */}
                             <View style={styles.header}>
                                 <View style={styles.headerLeft}>
                                     <View style={styles.iconContainer}>
-                                        <Ionicons name="location" size={24} color="#4285F4" />
+                                        <Ionicons name={headerIcon as any} size={24} color="#4285F4" />
                                     </View>
                                     <View style={styles.headerText}>
                                         <Text style={styles.title}>Ruta hacia</Text>
-                                        <Text style={styles.destination} numberOfLines={1}>
-                                            {destinationName || "Destino"}
+                                        <Text style={styles.destination} numberOfLines={2}>
+                                            {displayName}
                                         </Text>
+                                        {displaySubtitle && (
+                                            <Text style={{ fontSize: 12, color: "#5F6368", marginTop: 2 }}>
+                                                {displaySubtitle}
+                                            </Text>
+                                        )}
                                     </View>
                                 </View>
                             </View>
 
+                            {/* Distancia / Tiempo */}
                             <View style={styles.infoContainer}>
                                 <View style={styles.infoCard}>
                                     <View style={styles.iconCircle}>
@@ -112,7 +200,6 @@ const RouteInfoSheet: React.FC<RouteInfoSheetProps> = ({
                                     <Text style={styles.infoLabel}>Distancia</Text>
                                     <Text style={styles.infoValue}>{routeInfo.distancia}</Text>
                                 </View>
-
                                 <View style={styles.infoCard}>
                                     <View style={styles.iconCircle}>
                                         <Ionicons name="time" size={20} color="#34A853" />
@@ -129,11 +216,12 @@ const RouteInfoSheet: React.FC<RouteInfoSheetProps> = ({
                                 </View>
                             )}
 
+                            {/* Nav + Close */}
                             <View style={styles.buttonContainer}>
                                 <TouchableOpacity
                                     style={[
                                         styles.startButton,
-                                        (isNavigating || isRecalculating) && styles.startButtonDisabled
+                                        (isNavigating || isRecalculating) && styles.startButtonDisabled,
                                     ]}
                                     activeOpacity={0.8}
                                     onPress={handleStartNavigation}
@@ -165,20 +253,21 @@ const RouteInfoSheet: React.FC<RouteInfoSheetProps> = ({
                                 >
                                     <Ionicons name="close-circle-outline" size={20} color="#666" />
                                     <Text style={styles.closeButtonText}>
-                                        {isNavigating ? 'Detener navegación' : 'Cerrar'}
+                                        {isNavigating ? "Detener navegación" : "Cerrar"}
                                     </Text>
                                 </TouchableOpacity>
                             </View>
 
+                            {/* Info button */}
                             <TouchableOpacity
                                 style={{
                                     padding: 16,
-                                    backgroundColor: '#4285F4',
+                                    backgroundColor: infoColor,
                                     borderRadius: 12,
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    shadowColor: '#4285F4',
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    shadowColor: infoColor,
                                     shadowOffset: { width: 0, height: 4 },
                                     shadowOpacity: 0.3,
                                     shadowRadius: 8,
@@ -187,16 +276,11 @@ const RouteInfoSheet: React.FC<RouteInfoSheetProps> = ({
                                     gap: 8,
                                 }}
                                 activeOpacity={0.8}
-                                onPress={() => setShowLocationInfo(true)}
+                                onPress={() => setShowInfo(true)}
                             >
-                                <Ionicons name="information-circle" size={20} color="white" />
-                                <Text style={{
-                                    color: 'white',
-                                    fontSize: 15,
-                                    fontWeight: '600',
-                                    letterSpacing: 0.3,
-                                }}>
-                                    Información de la ubicación
+                                <Ionicons name={infoIcon as any} size={20} color="white" />
+                                <Text style={{ color: "white", fontSize: 15, fontWeight: "600", letterSpacing: 0.3 }}>
+                                    {infoLabel}
                                 </Text>
                             </TouchableOpacity>
                         </>
@@ -204,15 +288,30 @@ const RouteInfoSheet: React.FC<RouteInfoSheetProps> = ({
                 </View>
             </View>
 
+            {/* ── Person modal ───────────────────────────────────────────── */}
+            <PersonInformation
+                person={personData}
+                visible={showInfo && isPerson}
+                onClose={() => setShowInfo(false)}
+            />
+
+            {/* ── Event modal ────────────────────────────────────────────── */}
+            <EventInformation
+                event={eventData}
+                visible={showInfo && isEvent}
+                onClose={() => setShowInfo(false)}
+            />
+
+            {/* ── Location modal ─────────────────────────────────────────── */}
             <Modal
-                visible={showLocationInfo}
+                visible={showInfo && !isPerson && !isEvent}
                 animationType="slide"
                 presentationStyle="pageSheet"
-                onRequestClose={() => setShowLocationInfo(false)}
+                onRequestClose={() => setShowInfo(false)}
             >
                 <LocationInformation
                     location={selectedLocation}
-                    onClose={() => setShowLocationInfo(false)}
+                    onClose={() => setShowInfo(false)}
                 />
             </Modal>
         </>
